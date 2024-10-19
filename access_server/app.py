@@ -187,5 +187,50 @@ def upload_script():
     file.save(os.path.join(SCRIPTS_FOLDER, file.filename))
     return f'Script {file.filename} uploaded successfully!'
 
+
+# View and run script based on config.yaml
+@app.route('/config-titles', methods=['GET', 'POST'])
+@basic_auth.required
+def config_titles():
+    # Load the config file
+    with open(CONFIG_FILE, 'r') as config_file:
+        config_data = yaml.safe_load(config_file)
+
+    entries = config_data.get('entries', [])
+
+    if request.method == 'POST':
+        # Get the selected title from the form
+        selected_title = request.form['title']
+
+        # Find the corresponding directory
+        selected_entry = next((entry for entry in entries if entry['title'] == selected_title), None)
+
+        if selected_entry:
+            directory = selected_entry['directory']
+
+            # Run the script with the directory passed in
+            script_name = "your_script.sh"  # Replace with your actual script
+            result = os.system(f'bash {os.path.join(SCRIPTS_FOLDER, script_name)} {directory}')
+
+            return f'Script executed for {selected_title} with directory {directory}, result: {result}'
+        else:
+            return 'Selected title not found!', 400
+
+    # Display the titles as a dropdown for selection
+    return render_template_string('''
+        <h1>Select a Title</h1>
+        <form method="POST">
+            <select name="title">
+                {% for entry in entries %}
+                    <option value="{{ entry.title }}">{{ entry.title }}</option>
+                {% endfor %}
+            </select><br>
+            <input type="submit" value="Run Script">
+        </form>
+        ''', entries=entries)
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
+
