@@ -209,7 +209,7 @@ def config_titles():
             directory = selected_entry['directory']
 
             # Run the script with the directory passed in
-            script_name = "your_script.sh"  # Replace with your actual script
+            script_name = "display_image_dir.sh"  # Replace with your actual script
             result = os.system(f'bash {os.path.join(SCRIPTS_FOLDER, script_name)} {directory}')
 
             return f'Script executed for {selected_title} with directory {directory}, result: {result}'
