@@ -46,9 +46,9 @@ def file_management():
 @app.route('/upload-page')
 def upload_page():
     return '''
-    <h1>Upload File</h1>
+    <h1>Upload File or Folder</h1>
     <form method="POST" action="/upload" enctype="multipart/form-data">
-        <input type="file" name="file">
+        <input type="file" name="files" multiple webkitdirectory>
         <input type="submit" value="Upload">
     </form>
     '''
@@ -88,13 +88,25 @@ def upload_script_page():
 @app.route('/upload', methods=['POST'])
 @basic_auth.required
 def upload_file():
-    if 'file' not in request.files:
+    if 'files' not in request.files:
         return 'No file part'
-    file = request.files['file']
-    if file.filename == '':
-        return 'No selected file'
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
-    return f'File {file.filename} uploaded successfully!'
+
+    files = request.files.getlist('files')
+
+    if not files:
+        return 'No files selected'
+
+    for file in files:
+        if file.filename == '':
+            return 'No selected file'
+        # Ensure directory structure is preserved if folders are uploaded
+        filename = file.filename
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        file.save(file_path)
+
+    return 'Files uploaded successfully!'
+
 
 # Serve uploaded files
 @app.route('/uploads', methods=['GET'])
